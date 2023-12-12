@@ -18,25 +18,27 @@ namespace archive_utils
         out.push(io::gzip_compressor());
         out.push(io::file_descriptor_sink(outputDir.string()));
 
-        for (fs::recursive_directory_iterator it(inputDir), end; it != end; ++it)
-        {
-            if (fs::is_regular_file(*it))
-            {
-                fs::path relativePath = fs::relative(it->path(), inputDir);
-                std::cout << "relativePath: " << relativePath.string() << std::endl;
-                // out << relativePath.string() << '\n';
+        out << "test" << std::endl;
 
-                std::fstream file;
-                file.open(it->path().string(), std::ios::out);
-                if (file)
-                {
-                    io::copy(file, out);
-                    file.close();
-                }
-                else
-                    std::cout << "error opening file: " << relativePath.string() << std::endl;
-            }
-        }
+        // for (fs::recursive_directory_iterator it(inputDir), end; it != end; ++it)
+        // {
+        //     if (fs::is_regular_file(*it))
+        //     {
+        //         fs::path relativePath = fs::relative(it->path(), inputDir);
+        //         std::cout << "relativePath: " << relativePath.string() << std::endl;
+        //         // out << relativePath.string() << '\n';
+
+        //         std::fstream file;
+        //         file.open(it->path().string(), std::ios::out);
+        //         if (file)
+        //         {
+        //             io::copy(file, out);
+        //             file.close();
+        //         }
+        //         else
+        //             std::cout << "error opening file: " << relativePath.string() << std::endl;
+        //     }
+        // }
     }
 
     void decompressDirectory(const fs::path &inputDir, const fs::path &outputDir)
@@ -44,33 +46,43 @@ namespace archive_utils
         io::filtering_istream in;
         in.push(io::gzip_decompressor());
         in.push(io::file_descriptor_source(inputDir.string()));
+        std::fstream out;
+        out.open(outputDir.string(), std::ios::out | std::ios::binary);
 
-        int i = 1;
-        while (in.peek() != EOF)
+        if (out)
         {
-            std::cout << "start " << i << std::endl;
-            std::string relativePath;
-            std::getline(in, relativePath);
-
-            std::cout << "relativePath: " << relativePath << std::endl;
-
-            if (relativePath.empty())
-            {
-                break; // End of compressed data
-            }
-
-            // fs::path outputPath = outputDir / relativePath;
-            // std::cout << "outputPath: " << outputPath.string() << std::endl;
-            // fs::create_directories(outputPath.parent_path());
-            // std::cout << "good" << std::endl;
-
-            // std::ofstream file(outputPath.string(), std::ios_base::binary);
-            // std::cout << "good2" << std::endl;
-            // io::copy(in, file);
-            // std::cout << "good3" << std::endl;
-            ++i;
+            // std::string text;
+            // std::getline(in, text);
+            // out << text << std::endl;
+            io::copy(in, out);
         }
-        std::cout << "end" << std::endl;
+
+        // int i = 1;
+        // while (in.peek() != EOF)
+        // {
+        //     std::cout << "start " << i << std::endl;
+        //     std::string relativePath;
+        //     std::getline(in, relativePath);
+
+        //     std::cout << "relativePath: " << relativePath << std::endl;
+
+        //     if (relativePath.empty())
+        //     {
+        //         break; // End of compressed data
+        //     }
+
+        //     // fs::path outputPath = outputDir / relativePath;
+        //     // std::cout << "outputPath: " << outputPath.string() << std::endl;
+        //     // fs::create_directories(outputPath.parent_path());
+        //     // std::cout << "good" << std::endl;
+
+        //     // std::ofstream file(outputPath.string(), std::ios_base::binary);
+        //     // std::cout << "good2" << std::endl;
+        //     // io::copy(in, file);
+        //     // std::cout << "good3" << std::endl;
+        //     ++i;
+        // }
+        // std::cout << "end" << std::endl;
     }
 
     void hello()
