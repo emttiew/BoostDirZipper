@@ -7,6 +7,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <fstream>
 #include <iostream>
+#include <zlib.h>
 
 namespace archive_utils
 {
@@ -16,6 +17,7 @@ namespace archive_utils
     {
         io::filtering_ostream out;
         out.push(io::gzip_compressor());
+        out.push(io::file_sink(outputDir.string(), std::ios::binary));
 
         for (fs::recursive_directory_iterator it(inputDir), end; it != end; ++it)
         {
@@ -25,9 +27,15 @@ namespace archive_utils
                 std::ifstream file(it->path().string(), std::ios::binary);
                 if (file)
                 {
-                    out.push(io::file_descriptor_sink(outputDir.string(), std::ios::binary | std::ios::app));
-                    std::streamsize bytes_copied = io::copy(file, out);
-                    std::cout << "Compression: Number of bytes copied: " << bytes_copied << std::endl;
+                    fs::path relativePath = fs::relative(it->path(), inputDir);
+                    size_t relativePathSize = relativePath.string().size();
+                    std::cout << "compression relativePathSize: " << relativePathSize << std::endl;
+                    std::cout << "relativePath: " << relativePath.string() << std::endl;
+                    out.write(reinterpret_cast<char *>(&relativePathSize), sizeof(size_t));
+                    out.write(relativePath.c_str(), relativePathSize);
+                    std::size_t bytes_copied = io::copy(file, out);
+                    // out.write(reinterpret_cast<char *>(&bytes_copied), sizeof(size_t));
+                    std::cout << "Compression: Number of bytes copied: " << bytes_copied << " size of streamsize " << sizeof(std::size_t) << std::endl;
                     file.close();
                 }
                 else
@@ -38,6 +46,7 @@ namespace archive_utils
         }
 
         std::cout << "out size: " << out.size() << std::endl;
+        out.reset();
 
         //         fs::path relativePath = fs::relative(it->path(), inputDir);
         //         std::cout << "relativePath: " << relativePath.string() << std::endl;
@@ -54,9 +63,14 @@ namespace archive_utils
 
         if (out)
         {
-            // std::string text;
-            // std::getline(in, text);
-            // out << text << std::endl;
+            size_t relativePathSize = 0;
+            in.read(reinterpret_cast<char *>(&relativePathSize), sizeof(size_t));
+            std::cout << "relativePathSize: " << relativePathSize << std::endl;
+            std::vector<char> pathBuffer(relativePathSize);
+            in.read(pathBuffer.data(), relativePathSize);
+            std::string relativePath(pathBuffer.data(), relativePathSize);
+            std::cout << "decom relativePath: " << relativePath << std::endl;
+
             std::streamsize bytes_copied = io::copy(in, out);
             std::cout << "Decompression: Number of bytes copied: " << bytes_copied << std::endl;
         }
