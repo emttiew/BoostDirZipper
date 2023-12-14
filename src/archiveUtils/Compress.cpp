@@ -13,6 +13,20 @@ namespace archive_utils
 {
     namespace io = boost::iostreams;
 
+    struct PacketHeader
+    {
+        char isRegularFile;
+        std::size_t filePathSize;
+        std::string filePath;
+        std::size_t dataSize;
+        std::vector<char> dataBuffer;
+
+        bool isDirectory() const
+        {
+            return isRegularFile == '\x00';
+        }
+    };
+
     void compressDirectory(const fs::path &inputDir, const fs::path &outputDir)
     {
         io::filtering_ostream out;
@@ -29,16 +43,17 @@ namespace archive_utils
                 std::ifstream file(it->path().string(), std::ios::binary);
                 if (file)
                 {
-                    outStreamFile.put('\x00');
-                    fs::path relativePath = fs::relative(it->path(), inputDir);
-                    std::size_t relativePathSize = relativePath.string().size();
-                    std::cout << "compression relativePathSize: " << relativePathSize << std::endl;
-                    std::cout << "relativePath: " << relativePath.string() << std::endl;
-                    outStreamFile.write(reinterpret_cast<char *>(&relativePathSize), sizeof(std::size_t));
-                    outStreamFile.write(relativePath.c_str(), relativePathSize);
-                    std::uintmax_t dataSize = fs::file_size(it->path());
-                    std::cout << "dataSize: " << dataSize << std::endl;
-                    outStreamFile.write(reinterpret_cast<char *>(&dataSize), sizeof(std::uintmax_t));
+                    outStreamFile.put('\x01');
+                    PacketHeader packetHeader;
+                    packetHeader.filePath = fs::relative(it->path(), inputDir).string();
+                    packetHeader.filePathSize = packetHeader.filePath.size();
+                    std::cout << "compression relativePathSize: " << packetHeader.filePathSize << std::endl;
+                    std::cout << "relativePath: " << packetHeader.filePath << std::endl;
+                    outStreamFile.write(reinterpret_cast<char *>(&packetHeader.filePathSize), sizeof(std::size_t));
+                    outStreamFile.write(packetHeader.filePath.data(), packetHeader.filePathSize);
+                    packetHeader.dataSize = fs::file_size(it->path());
+                    std::cout << "dataSize: " << packetHeader.dataSize << std::endl;
+                    outStreamFile.write(reinterpret_cast<char *>(&packetHeader.dataSize), sizeof(packetHeader.dataSize));
                     std::size_t bytes_copied = io::copy(file, outStreamFile);
                     std::cout << "Compression: Number of bytes copied: " << bytes_copied << std::endl;
                     file.close();
@@ -48,7 +63,7 @@ namespace archive_utils
             }
             if (fs::is_directory(*it))
             {
-                outStreamFile.put('\x01');
+                outStreamFile.put('\x00');
                 fs::path relativePath = fs::relative(it->path(), inputDir);
                 std::size_t relativePathSize = relativePath.string().size();
                 outStreamFile.write(reinterpret_cast<char *>(&relativePathSize), sizeof(std::size_t));
@@ -63,13 +78,6 @@ namespace archive_utils
 
     namespace
     {
-        bool isDirectory(io::filtering_istream &stream)
-        {
-            char value;
-            stream.get(value);
-            return value != '\x00'; // Returns true if value is not zero
-        }
-
         void ensureDirectoryExists(fs::path const &dir)
         {
             if (!fs::exists(dir))
@@ -86,19 +94,18 @@ namespace archive_utils
 
         while (in.peek() != EOF)
         {
-            bool isRegularFile = !isDirectory(in);
-            size_t relativePathSize = 0;
-            in.read(reinterpret_cast<char *>(&relativePathSize), sizeof(size_t));
-            std::cout << "relativePathSize: " << relativePathSize << std::endl;
-            std::vector<char> pathBuffer(relativePathSize);
-            in.read(pathBuffer.data(), relativePathSize);
-            std::string relativePath(pathBuffer.data(), relativePathSize);
-            std::cout << "decom relativePath: " << relativePath << std::endl;
-            auto filepath = outputDir / fs::path{relativePath}.relative_path();
+            PacketHeader packetHeader;
+            in.get(packetHeader.isRegularFile);
+            in.read(reinterpret_cast<char *>(&packetHeader.filePathSize), sizeof(packetHeader.filePathSize));
+            std::cout << "relativePathSize: " << packetHeader.filePathSize << std::endl;
+            packetHeader.filePath.resize(packetHeader.filePathSize);
+            in.read(&packetHeader.filePath[0], packetHeader.filePathSize);
+            std::cout << "decom relativePath: " << packetHeader.filePath << std::endl;
+            auto filepath = outputDir / fs::path{packetHeader.filePath}.relative_path();
             std::cout << "filepath: " << filepath.string() << std::endl;
             std::cout << "filepath parent: " << filepath.parent_path().string() << std::endl;
 
-            if (!isRegularFile)
+            if (packetHeader.isDirectory())
             {
                 ensureDirectoryExists(filepath);
             }
@@ -107,12 +114,12 @@ namespace archive_utils
                 ensureDirectoryExists(filepath.parent_path());
                 std::ofstream destFile;
                 destFile.open(filepath.string().c_str(), std::ios::binary | std::ios::trunc);
-                std::uintmax_t dataSize = 0;
-                in.read(reinterpret_cast<char *>(&dataSize), sizeof(std::uintmax_t));
-                std::cout << "decom dataSize: " << dataSize << std::endl;
-                std::vector<char> dataBuffer(dataSize);
-                in.read(dataBuffer.data(), dataSize);
-                destFile.write(dataBuffer.data(), dataBuffer.size());
+                
+                in.read(reinterpret_cast<char *>(&packetHeader.dataSize), sizeof(packetHeader.dataSize));
+                std::cout << "decom dataSize: " << packetHeader.dataSize << std::endl;
+                packetHeader.dataBuffer.resize(packetHeader.dataSize);
+                in.read(packetHeader.dataBuffer.data(), packetHeader.dataSize);
+                destFile.write(packetHeader.dataBuffer.data(), packetHeader.dataBuffer.size());
             }
         }
     }
