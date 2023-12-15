@@ -15,18 +15,45 @@ namespace archive_utils
 
     struct RelativePathEntry
     {
-        char isRegularFile;
-        std::size_t pathSize;
-        std::string filePath;
+        RelativePathEntry() = default;
+        explicit RelativePathEntry(char pIsRegularFile, std::size_t pPathSize, const std::string &pFilePath)
+            : isRegularFile(pIsRegularFile), pathSize(pPathSize), filePath(pFilePath)
+        {
+        }
 
         bool isDirectory() const
         {
             return isRegularFile == '\x00';
         }
+
+        void writeToStream(io::filtering_ostream &out)
+        {
+            out.put(isRegularFile);
+            out.write(reinterpret_cast<char *>(&pathSize), sizeof(pathSize));
+            out.write(filePath.data(), pathSize);
+        }
+
+    private:
+        char isRegularFile;
+        std::size_t pathSize;
+        std::string filePath;
     };
 
     struct DataEntry
     {
+        DataEntry() = default;
+        explicit DataEntry(std::size_t pDataSize) : dataSize(pDataSize)
+        {
+            dataBuffer.resize(dataSize);
+        }
+
+        void writeToStream(io::filtering_ostream &out)
+        {
+            out.write(reinterpret_cast<char *>(&dataSize), sizeof(dataSize));
+            out.write(dataBuffer.data(), dataSize);
+        }
+
+    private:
         std::size_t dataSize;
         std::vector<char> dataBuffer;
     };
@@ -34,23 +61,50 @@ namespace archive_utils
     class Archive
     {
     public:
+        Archive() = default;
+        explicit Archive(const fs::path &filePath)
+        {
+            archiveStream.push(io::gzip_compressor());
+            archiveStream.push(io::file_sink(filePath.string(), std::ios::binary));
+        }
+
+        // ~Archive()
+        // {
+        //     archiveStream.reset();
+        // }
+
         void addFile(const fs::path &filePath)
         {
-            RelativePathEntry relativePath{'\x01', filePath.string().size(), filePath.string()};
-            DataEntry dataEntry;
-            dataEntry.dataSize = fs::file_size(filePath);
-            dataEntry.dataBuffer.resize(dataEntry.dataSize);
+            // open file (TODO add exception safety!)
+            std::ifstream file(filePath.string(), std::ios::binary);
+            if (file)
+            {
+                fileStream.push(archiveStream);
+                RelativePathEntry relativePath('\x01', filePath.string().size(), filePath.string());
+                DataEntry dataEntry(fs::file_size(filePath));
+                relativePath.writeToStream(fileStream);
+                dataEntry.writeToStream(fileStream);
+                file.close();
+            }
+            else
+            {
+                std::cout << "error opening file: " << filePath.string() << std::endl;
+            }
         }
 
         void addDirectory(const fs::path &filePath)
         {
-            RelativePathEntry entry{'\x00', filePath.string().size(), filePath.string()};
+            fileStream.push(archiveStream);
+            RelativePathEntry entry('\x00', filePath.string().size(), filePath.string());
+            entry.writeToStream(fileStream);
         }
 
     private:
-    // TODO figrue out good way to defince constructors etc.
+        // TODO figrue out good way to defince constructors etc.
         RelativePathEntry relativePath;
         DataEntry data;
+        io::filtering_ostream archiveStream;
+        io::filtering_ostream fileStream;
     };
 
     struct PacketHeader
