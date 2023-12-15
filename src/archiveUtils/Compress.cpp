@@ -13,6 +13,46 @@ namespace archive_utils
 {
     namespace io = boost::iostreams;
 
+    struct RelativePathEntry
+    {
+        char isRegularFile;
+        std::size_t pathSize;
+        std::string filePath;
+
+        bool isDirectory() const
+        {
+            return isRegularFile == '\x00';
+        }
+    };
+
+    struct DataEntry
+    {
+        std::size_t dataSize;
+        std::vector<char> dataBuffer;
+    };
+
+    class Archive
+    {
+    public:
+        void addFile(const fs::path &filePath)
+        {
+            RelativePathEntry relativePath{'\x01', filePath.string().size(), filePath.string()};
+            DataEntry dataEntry;
+            dataEntry.dataSize = fs::file_size(filePath);
+            dataEntry.dataBuffer.resize(dataEntry.dataSize);
+        }
+
+        void addDirectory(const fs::path &filePath)
+        {
+            RelativePathEntry entry{'\x00', filePath.string().size(), filePath.string()};
+        }
+
+    private:
+    // TODO figrue out good way to defince constructors etc.
+        RelativePathEntry relativePath;
+        DataEntry data;
+    };
+
     struct PacketHeader
     {
         char isRegularFile;
@@ -114,7 +154,7 @@ namespace archive_utils
                 ensureDirectoryExists(filepath.parent_path());
                 std::ofstream destFile;
                 destFile.open(filepath.string().c_str(), std::ios::binary | std::ios::trunc);
-                
+
                 in.read(reinterpret_cast<char *>(&packetHeader.dataSize), sizeof(packetHeader.dataSize));
                 std::cout << "decom dataSize: " << packetHeader.dataSize << std::endl;
                 packetHeader.dataBuffer.resize(packetHeader.dataSize);
