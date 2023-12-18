@@ -16,8 +16,8 @@ namespace archive_utils
     struct RelativePathEntry
     {
         RelativePathEntry() = default;
-        explicit RelativePathEntry(char pIsRegularFile, std::size_t pPathSize, const std::string &pFilePath)
-            : isRegularFile(pIsRegularFile), pathSize(pPathSize), filePath(pFilePath)
+        explicit RelativePathEntry(char pIsRegularFile, const std::string &pFilePath)
+            : isRegularFile(pIsRegularFile), pathSize(pFilePath.size()), filePath(pFilePath)
         {
         }
 
@@ -28,6 +28,8 @@ namespace archive_utils
 
         void writeToStream(io::filtering_ostream &out)
         {
+            std::cout << "isRegularFile: " << isRegularFile << std::endl;
+            std::cout << "pathSize: " << pathSize << std::endl;
             out.put(isRegularFile);
             out.write(reinterpret_cast<char *>(&pathSize), sizeof(pathSize));
             out.write(filePath.data(), pathSize);
@@ -49,8 +51,16 @@ namespace archive_utils
 
         void writeToStream(io::filtering_ostream &out)
         {
+            std::cout << "dataSize: " << dataSize << std::endl;
             out.write(reinterpret_cast<char *>(&dataSize), sizeof(dataSize));
             out.write(dataBuffer.data(), dataSize);
+        }
+
+        void readDataFromFile(std::ifstream &file)
+        {
+            if (file)
+                file.read(dataBuffer.data(), dataSize); // handle bad bit
+            // throw or something
         }
 
     private:
@@ -62,10 +72,10 @@ namespace archive_utils
     {
     public:
         Archive() = default;
-        explicit Archive(const fs::path &filePath)
+        explicit Archive(const fs::path &outputDir, const fs::path &pInputDir) : inputDir(pInputDir)
         {
             archiveStream.push(io::gzip_compressor());
-            archiveStream.push(io::file_sink(filePath.string(), std::ios::binary));
+            archiveStream.push(io::file_sink(outputDir.string(), std::ios::binary));
         }
 
         // ~Archive()
@@ -79,10 +89,12 @@ namespace archive_utils
             std::ifstream file(filePath.string(), std::ios::binary);
             if (file)
             {
+                io::filtering_ostream fileStream;
                 fileStream.push(archiveStream);
-                RelativePathEntry relativePath('\x01', filePath.string().size(), filePath.string());
+                RelativePathEntry relativePathEntry('\x01', fs::relative(filePath, inputDir).string());
                 DataEntry dataEntry(fs::file_size(filePath));
-                relativePath.writeToStream(fileStream);
+                relativePathEntry.writeToStream(fileStream);
+                dataEntry.readDataFromFile(file);
                 dataEntry.writeToStream(fileStream);
                 file.close();
             }
@@ -94,8 +106,9 @@ namespace archive_utils
 
         void addDirectory(const fs::path &filePath)
         {
+            io::filtering_ostream fileStream;
             fileStream.push(archiveStream);
-            RelativePathEntry entry('\x00', filePath.string().size(), filePath.string());
+            RelativePathEntry entry('\x00', fs::relative(filePath, inputDir).string());
             entry.writeToStream(fileStream);
         }
 
@@ -104,7 +117,7 @@ namespace archive_utils
         RelativePathEntry relativePath;
         DataEntry data;
         io::filtering_ostream archiveStream;
-        io::filtering_ostream fileStream;
+        fs::path inputDir;
     };
 
     struct PacketHeader
@@ -123,51 +136,21 @@ namespace archive_utils
 
     void compressDirectory(const fs::path &inputDir, const fs::path &outputDir)
     {
-        io::filtering_ostream out;
-        out.push(io::gzip_compressor());
-        out.push(io::file_sink(outputDir.string(), std::ios::binary));
+        Archive archive(outputDir, inputDir);
 
         for (fs::recursive_directory_iterator it(inputDir), end; it != end; ++it)
         {
-            io::filtering_ostream outStreamFile;
-            outStreamFile.push(out);
             if (fs::is_regular_file(*it))
             {
                 std::cout << "file path: " << it->path().string() << std::endl;
-                std::ifstream file(it->path().string(), std::ios::binary);
-                if (file)
-                {
-                    outStreamFile.put('\x01');
-                    PacketHeader packetHeader;
-                    packetHeader.filePath = fs::relative(it->path(), inputDir).string();
-                    packetHeader.filePathSize = packetHeader.filePath.size();
-                    std::cout << "compression relativePathSize: " << packetHeader.filePathSize << std::endl;
-                    std::cout << "relativePath: " << packetHeader.filePath << std::endl;
-                    outStreamFile.write(reinterpret_cast<char *>(&packetHeader.filePathSize), sizeof(std::size_t));
-                    outStreamFile.write(packetHeader.filePath.data(), packetHeader.filePathSize);
-                    packetHeader.dataSize = fs::file_size(it->path());
-                    std::cout << "dataSize: " << packetHeader.dataSize << std::endl;
-                    outStreamFile.write(reinterpret_cast<char *>(&packetHeader.dataSize), sizeof(packetHeader.dataSize));
-                    std::size_t bytes_copied = io::copy(file, outStreamFile);
-                    std::cout << "Compression: Number of bytes copied: " << bytes_copied << std::endl;
-                    file.close();
-                }
-                else
-                    std::cout << "error opening file: " << it->path().string() << std::endl;
+                archive.addFile(it->path());
             }
             if (fs::is_directory(*it))
             {
-                outStreamFile.put('\x00');
-                fs::path relativePath = fs::relative(it->path(), inputDir);
-                std::size_t relativePathSize = relativePath.string().size();
-                outStreamFile.write(reinterpret_cast<char *>(&relativePathSize), sizeof(std::size_t));
-                outStreamFile.write(relativePath.c_str(), relativePathSize);
                 std::cout << "dirctory path: " << it->path().string() << std::endl;
+                archive.addDirectory(it->path());
             }
         }
-
-        std::cout << "out size: " << out.size() << std::endl;
-        out.reset();
     }
 
     namespace
