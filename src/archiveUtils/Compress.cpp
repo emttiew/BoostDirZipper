@@ -23,7 +23,7 @@ namespace archive_utils
 
         bool isDirectory() const
         {
-            return isRegularFile == '\x00';
+            return isRegularFile == '\x00'; // TODO upgrade this value to a variable
         }
 
         void writeToStream(io::filtering_ostream &out)
@@ -33,6 +33,19 @@ namespace archive_utils
             out.put(isRegularFile);
             out.write(reinterpret_cast<char *>(&pathSize), sizeof(pathSize));
             out.write(filePath.data(), pathSize);
+        }
+
+        void readFromStream(io::filtering_istream &in)
+        {
+            in.get(isRegularFile);
+            in.read(reinterpret_cast<char *>(&pathSize), sizeof(pathSize));
+            filePath.resize(pathSize);
+            in.read(filePath.data(), pathSize);
+        }
+
+        std::string getFilePath() const
+        {
+            return filePath;
         }
 
     private:
@@ -56,11 +69,28 @@ namespace archive_utils
             out.write(dataBuffer.data(), dataSize);
         }
 
+        void readFromStream(io::filtering_istream &in)
+        {
+            in.read(reinterpret_cast<char *>(&dataSize), sizeof(dataSize));
+            dataBuffer.resize(dataSize);
+            in.read(dataBuffer.data(), dataSize);
+        }
+
         void readDataFromFile(std::ifstream &file)
         {
             if (file)
                 file.read(dataBuffer.data(), dataSize); // handle bad bit
             // throw or something
+        }
+
+        std::vector<char> getData() const
+        {
+            return dataBuffer;
+        }
+
+        std::size_t getDataSize() const
+        {
+            return dataSize;
         }
 
     private:
@@ -75,7 +105,7 @@ namespace archive_utils
         explicit Archive(const fs::path &outputDir, const fs::path &pInputDir) : inputDir(pInputDir)
         {
             archiveStream.push(io::gzip_compressor());
-            archiveStream.push(io::file_sink(outputDir.string(), std::ios::binary));
+            archiveStream.push(io::file_descriptor_sink(outputDir.string(), std::ios::binary));
         }
 
         // ~Archive()
@@ -120,6 +150,58 @@ namespace archive_utils
         fs::path inputDir;
     };
 
+    struct ArchiveEntry
+    {
+        RelativePathEntry relativePath;
+        DataEntry data;
+        void readFromStream(io::filtering_istream &in)
+        {
+            relativePath.readFromStream(in);
+            data.readFromStream(in);
+        }
+        bool isDirectory() const
+        {
+            return relativePath.isDirectory();
+        }
+    };
+
+    class ArchiveDecompressor
+    {
+    public:
+        ArchiveDecompressor() = default;
+        explicit ArchiveDecompressor(const fs::path &inputDir)
+        {
+            archiveStream.push(io::gzip_decompressor());
+            archiveStream.push(io::file_descriptor_source(inputDir.string(), std::ios::binary)); // file_source?
+        }
+
+        std::vector<ArchiveEntry> getEntries()
+        {
+            std::vector<ArchiveEntry> entries;
+            while (archiveStream.peek() != EOF)
+            {
+                entries.push_back(getSingleEntry());
+            }
+            return entries;
+        }
+
+        // ~ArchiveDecompressor()
+        // {
+        //     archiveStream.reset();
+        // }
+
+    private:
+        ArchiveEntry getSingleEntry()
+        {
+            ArchiveEntry entry;
+            entry.readFromStream(archiveStream);
+            return entry;
+        }
+
+    private:
+        io::filtering_istream archiveStream;
+    };
+
     struct PacketHeader
     {
         char isRegularFile;
@@ -134,10 +216,12 @@ namespace archive_utils
         }
     };
 
+    // TODO this function could be inside archive class
     void compressDirectory(const fs::path &inputDir, const fs::path &outputDir)
     {
         Archive archive(outputDir, inputDir);
 
+        // TODO what if inputDir is not a directory
         for (fs::recursive_directory_iterator it(inputDir), end; it != end; ++it)
         {
             if (fs::is_regular_file(*it))
@@ -164,25 +248,13 @@ namespace archive_utils
 
     void decompressDirectory(const fs::path &inputDir, const fs::path &outputDir)
     {
-        io::filtering_istream in;
-        in.push(io::gzip_decompressor());
-        in.push(io::file_descriptor_source(inputDir.string(), std::ios::binary));
+        ArchiveDecompressor archive(inputDir);
         ensureDirectoryExists(outputDir);
 
-        while (in.peek() != EOF)
+        for (auto &entry : archive.getEntries())
         {
-            PacketHeader packetHeader;
-            in.get(packetHeader.isRegularFile);
-            in.read(reinterpret_cast<char *>(&packetHeader.filePathSize), sizeof(packetHeader.filePathSize));
-            std::cout << "relativePathSize: " << packetHeader.filePathSize << std::endl;
-            packetHeader.filePath.resize(packetHeader.filePathSize);
-            in.read(&packetHeader.filePath[0], packetHeader.filePathSize);
-            std::cout << "decom relativePath: " << packetHeader.filePath << std::endl;
-            auto filepath = outputDir / fs::path{packetHeader.filePath}.relative_path();
-            std::cout << "filepath: " << filepath.string() << std::endl;
-            std::cout << "filepath parent: " << filepath.parent_path().string() << std::endl;
-
-            if (packetHeader.isDirectory())
+            auto filepath = outputDir / fs::path{entry.relativePath.getFilePath()}.relative_path();
+            if (entry.isDirectory())
             {
                 ensureDirectoryExists(filepath);
             }
@@ -191,12 +263,8 @@ namespace archive_utils
                 ensureDirectoryExists(filepath.parent_path());
                 std::ofstream destFile;
                 destFile.open(filepath.string().c_str(), std::ios::binary | std::ios::trunc);
-
-                in.read(reinterpret_cast<char *>(&packetHeader.dataSize), sizeof(packetHeader.dataSize));
-                std::cout << "decom dataSize: " << packetHeader.dataSize << std::endl;
-                packetHeader.dataBuffer.resize(packetHeader.dataSize);
-                in.read(packetHeader.dataBuffer.data(), packetHeader.dataSize);
-                destFile.write(packetHeader.dataBuffer.data(), packetHeader.dataBuffer.size());
+                destFile.write(entry.data.getData().data(), entry.data.getDataSize());
+                destFile.close();
             }
         }
     }
