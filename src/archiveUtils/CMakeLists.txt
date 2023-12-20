@@ -4,6 +4,10 @@ project(ArchiveUtils CXX)
 set(SOURCE_FILES
     Compress.cpp
     Decompress.cpp
+    ArchiveCompressor.cpp
+    ArchiveDecompressor.cpp
+    RelativePathEntry.cpp
+    DataEntry.cpp
 )
 
 add_library(ArchiveUtils STATIC ${SOURCE_FILES})
