@@ -5,20 +5,24 @@
 
 namespace archive_utils
 {
-
     ArchiveDecompressor::ArchiveDecompressor(const fs::path &inputDir)
     {
         archiveStream.push(io::gzip_decompressor());
         archiveStream.push(io::file_descriptor_source(inputDir.string(), std::ios::binary));
     }
 
-    ArchiveEntryPtrVec ArchiveDecompressor::getEntries()
+    void ArchiveDecompressor::decompress()
     {
-        ArchiveEntryPtrVec entries;
         while (archiveStream.peek() != EOF)
         {
-            entries.push_back(createEntry(archiveStream));
+            auto entry = std::make_shared<ArchiveEntry>();
+            entry->read(archiveStream);
+            entries.push_back(std::move(entry));
         }
+    }
+
+    ArchiveEntryPtrVec ArchiveDecompressor::getEntries() const
+    {
         return entries;
     }
 }

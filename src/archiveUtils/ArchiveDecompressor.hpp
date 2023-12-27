@@ -12,13 +12,15 @@ namespace io = boost::iostreams;
 
 namespace archive_utils
 {
+    using ArchiveEntryPtr = std::shared_ptr<ArchiveEntry>;
     using ArchiveEntryPtrVec = std::vector<ArchiveEntryPtr>;
+
     class ArchiveDecompressor
     {
     public:
-        ArchiveDecompressor() = default;
         explicit ArchiveDecompressor(const fs::path &inputDir);
-        ArchiveEntryPtrVec getEntries();
+        ArchiveEntryPtrVec getEntries() const;
+        void decompress(); // should throw, return error code ...
 
         // ~ArchiveDecompressor()
         // {
@@ -27,5 +29,6 @@ namespace archive_utils
 
     private:
         io::filtering_istream archiveStream;
+        ArchiveEntryPtrVec entries;
     };
 }

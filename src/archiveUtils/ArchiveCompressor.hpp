@@ -12,8 +12,7 @@ namespace archive_utils {
 class ArchiveCompressor
 {
 public:
-    ArchiveCompressor() = default;
-    explicit ArchiveCompressor(const fs::path &outputDir, const fs::path &pInputDir);
+    ArchiveCompressor(const fs::path &outputDir, const fs::path &pInputDir);
     void addFile(const fs::path &filePath);
     void addDirectory(const fs::path &filePath);
 
@@ -23,8 +22,6 @@ public:
     // }
 private:
     // TODO figrue out good way to defince constructors etc.
-    RelativePathEntry relativePath;
-    DataEntry data;
     io::filtering_ostream archiveStream;
     fs::path inputDir;
 };

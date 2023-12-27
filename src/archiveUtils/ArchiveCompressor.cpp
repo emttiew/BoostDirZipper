@@ -18,13 +18,17 @@ namespace archive_utils
     void ArchiveCompressor::addFile(const fs::path &filePath)
     {
         // open file (TODO add exception safety!)
+        // TODO check if the file is binary the same to previously added files
         std::ifstream file(filePath.string(), std::ios::binary);
         if (file)
         {
             io::filtering_ostream fileStream;
             fileStream.push(archiveStream);
-            RelativePathEntry relativePathEntry('\x01', fs::relative(filePath, inputDir).string());
-            DataEntry dataEntry(fs::file_size(filePath), file);
+            std::string const &path = fs::relative(filePath, inputDir).string();
+            RelativePathEntry relativePathEntry{'\x01', path.size(), path};
+            auto fileSize = fs::file_size(filePath);
+            DataEntry dataEntry{fileSize, std::vector<char>(fileSize)};
+            file.read(dataEntry.dataBuffer.data(), dataEntry.dataSize);
             relativePathEntry.writeToStream(fileStream);
             dataEntry.writeToStream(fileStream);
             file.close();
@@ -39,7 +43,8 @@ namespace archive_utils
     {
         io::filtering_ostream fileStream;
         fileStream.push(archiveStream);
-        RelativePathEntry entry('\x00', fs::relative(filePath, inputDir).string());
+        std::string const &path = fs::relative(filePath, inputDir).string();
+        RelativePathEntry entry{'\x00', path.size(), path};
         entry.writeToStream(fileStream);
     }
 

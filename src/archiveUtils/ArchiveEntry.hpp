@@ -6,33 +6,26 @@
 
 namespace archive_utils
 {
-    class ArchiveEntry;
-    using ArchiveEntryPtr = std::shared_ptr<ArchiveEntry>;
-
-    static ArchiveEntryPtr createEntry(io::filtering_istream &in)
-    {
-        return std::make_shared<ArchiveEntry>(in);
-    }
-
     class ArchiveEntry
     {
     public:
-        explicit ArchiveEntry(io::filtering_istream &in)
+        void read(io::filtering_istream &in) // should return error code, handle bad bit or handle exceptions
         {
             relativePath.readFromStream(in);
             data.readFromStream(in);
         }
+
         bool isDirectory() const
         {
             return relativePath.isDirectory();
         }
         std::vector<char> getData() const
         {
-            return data.getData();
+            return data.dataBuffer;
         }
         std::string getFilePath() const
         {
-            return relativePath.getFilePath();
+            return relativePath.filePath;
         }
 
     private:

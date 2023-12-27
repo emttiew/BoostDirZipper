@@ -2,11 +2,6 @@
 
 namespace archive_utils
 {
-    RelativePathEntry::RelativePathEntry(char pIsRegularFile, const std::string &pFilePath)
-        : isRegularFile(pIsRegularFile), pathSize(pFilePath.size()), filePath(pFilePath)
-    {
-    }
-
     bool RelativePathEntry::isDirectory() const
     {
         return isRegularFile == '\x00'; // TODO upgrade this value to a variable
@@ -25,10 +20,5 @@ namespace archive_utils
         in.read(reinterpret_cast<char *>(&pathSize), sizeof(pathSize));
         filePath.resize(pathSize);
         in.read(filePath.data(), pathSize);
-    }
-
-    std::string RelativePathEntry::getFilePath() const
-    {
-        return filePath;
     }
 }

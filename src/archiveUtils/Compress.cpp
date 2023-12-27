@@ -2,12 +2,7 @@
 #include "ArchiveCompressor.hpp"
 #include "ArchiveDecompressor.hpp"
 
-#include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/device/file.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <fstream>
 #include <iostream>
-#include <zlib.h>
 
 namespace archive_utils
 {
@@ -47,8 +42,10 @@ namespace archive_utils
     {
         ArchiveDecompressor archive(inputDir);
         ensureDirectoryExists(outputDir);
+        
+        archive.decompress(); // TODO handle errors
 
-        for (auto const& entry : archive.getEntries())
+        for (ArchiveEntryPtr const &entry : archive.getEntries())
         {
             if (entry)
             {
