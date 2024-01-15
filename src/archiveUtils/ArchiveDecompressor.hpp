@@ -26,7 +26,6 @@ namespace archive_utils
         // {
         //     archiveStream.reset();
         // }
-        //
 
     private:
         io::filtering_istream archiveStream;
