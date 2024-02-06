@@ -21,12 +21,7 @@ namespace archive_utils
         explicit ArchiveDecompressor(const fs::path &inputDir);
         ArchiveEntryPtrVec getEntries() const;
         void decompress(); // should throw, return error code ...
-
-        // ~ArchiveDecompressor()
-        // {
-        //     archiveStream.reset();
-        // }
-
+        
     private:
         io::filtering_istream archiveStream;
         ArchiveEntryPtrVec entries;

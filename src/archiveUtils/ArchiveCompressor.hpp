@@ -16,12 +16,7 @@ public:
     void addFile(const fs::path &filePath);
     void addDirectory(const fs::path &filePath);
 
-    // ~Archive()
-    // {
-    //     archiveStream.reset();
-    // }
 private:
-    // TODO figrue out good way to defince constructors etc.
     io::filtering_ostream archiveStream;
     fs::path inputDir;
 };

@@ -22,13 +22,13 @@ namespace archive_utils
         std::ifstream file(filePath.string(), std::ios::binary);
         if (file)
         {
+            std::cout << "adding " << filePath.string() << std::endl;
             io::filtering_ostream fileStream;
             fileStream.push(archiveStream);
             std::string const &path = fs::relative(filePath, inputDir).string();
-            RelativePathEntry relativePathEntry{'\x01', path.size(), path};
-            auto fileSize = fs::file_size(filePath);
-            DataEntry dataEntry{fileSize, std::vector<char>(fileSize)};
-            file.read(dataEntry.dataBuffer.data(), dataEntry.dataSize);
+            RelativePathEntry relativePathEntry(path, EntryType::File);
+            DataEntry dataEntry(fs::file_size(filePath));
+            dataEntry.read(file);
             relativePathEntry.writeToStream(fileStream);
             dataEntry.writeToStream(fileStream);
             file.close();
@@ -44,8 +44,7 @@ namespace archive_utils
         io::filtering_ostream fileStream;
         fileStream.push(archiveStream);
         std::string const &path = fs::relative(filePath, inputDir).string();
-        RelativePathEntry entry{'\x00', path.size(), path};
+        RelativePathEntry entry(path, EntryType::Directory);
         entry.writeToStream(fileStream);
     }
-
 }

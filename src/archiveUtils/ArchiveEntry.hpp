@@ -9,26 +9,30 @@ namespace archive_utils
     class ArchiveEntry
     {
     public:
-        void read(io::filtering_istream &in) // should return error code, handle bad bit or handle exceptions
+        ArchiveEntry(io::filtering_istream &in) : archiveStream(in) ,relativePath(in), data(in) {}
+        // void read() // TODO: should return error code, handle bad bit or handle exceptions
+        // {
+        //     relativePath.readFromStream(archiveStream);
+        //     data.readFromStream(archiveStream);
+        // }
+
+        void write(std::ofstream &file) const // TODO: exception hadnle
         {
-            relativePath.readFromStream(in);
-            data.readFromStream(in);
+            file.write(data.getData(), data.getSize());
         }
 
         bool isDirectory() const
         {
             return relativePath.isDirectory();
         }
-        std::vector<char> getData() const
-        {
-            return data.dataBuffer;
-        }
+
         std::string getFilePath() const
         {
-            return relativePath.filePath;
+            return relativePath.getPath();
         }
 
     private:
+        io::filtering_istream& archiveStream;
         RelativePathEntry relativePath;
         DataEntry data;
     };

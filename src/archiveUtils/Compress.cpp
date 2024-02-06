@@ -45,11 +45,14 @@ namespace archive_utils
         
         archive.decompress(); // TODO handle errors
 
+        std::cout << "entries size " << archive.getEntries().size() << std::endl; 
+
         for (ArchiveEntryPtr const &entry : archive.getEntries())
         {
             if (entry)
             {
                 auto filepath = outputDir / fs::path{entry->getFilePath()}.relative_path();
+                std::cout << "decompressing: " << filepath.string() << std::endl;
                 if (entry->isDirectory())
                 {
                     ensureDirectoryExists(filepath);
@@ -59,10 +62,12 @@ namespace archive_utils
                     ensureDirectoryExists(filepath.parent_path());
                     std::ofstream destFile;
                     destFile.open(filepath.string().c_str(), std::ios::binary | std::ios::trunc);
-                    auto const &data = entry->getData();
-                    destFile.write(data.data(), data.size());
+                    entry->write(destFile);
                     destFile.close();
                 }
+            }
+            else{
+                std::cout << "null entry" << std::endl;
             }
         }
     }

@@ -15,8 +15,8 @@ namespace archive_utils
     {
         while (archiveStream.peek() != EOF)
         {
-            auto entry = std::make_shared<ArchiveEntry>();
-            entry->read(archiveStream);
+            auto entry = std::make_shared<ArchiveEntry>(archiveStream);
+            //entry->read();
             entries.push_back(std::move(entry));
         }
     }
