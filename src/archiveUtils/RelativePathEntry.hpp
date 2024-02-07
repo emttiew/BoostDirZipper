@@ -1,9 +1,8 @@
 #pragma once
 
-#include <boost/iostreams/filtering_stream.hpp>
+#include "Entry.hpp"
 #include <string>
 
-namespace io = boost::iostreams;
 namespace archive_utils
 {
     enum class EntryType : char
@@ -12,15 +11,15 @@ namespace archive_utils
         File = '\x01'
     };
 
-    struct RelativePathEntry
+    struct RelativePathEntry : Entry
     {
         RelativePathEntry(std::string const &path, EntryType pEntryType) : pathSize(path.size()), filePath(path), entryType(pEntryType) {}
         explicit RelativePathEntry(io::filtering_istream &in)
         {
             this->readFromStream(in);
         }
-        void writeToStream(io::filtering_ostream &out);
-        void readFromStream(io::filtering_istream &in);
+        void writeToStream(io::filtering_ostream &out) override;
+        void readFromStream(io::filtering_istream &in) override;
 
         bool isDirectory() const
         {

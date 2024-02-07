@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/iostreams/filtering_stream.hpp>
+#include "Entry.hpp"
 #include <cstring>
 #include <fstream>
 #include <memory>
@@ -8,9 +8,7 @@
 
 namespace archive_utils
 {
-    namespace io = boost::iostreams;
-
-    class DataEntry
+    class DataEntry : Entry
     {
     public:
         explicit DataEntry(std::size_t pDataSize) : dataSize(pDataSize)
@@ -39,8 +37,8 @@ namespace archive_utils
             return dataSize;
         }
 
-        void writeToStream(io::filtering_ostream &out);
-        void readFromStream(io::filtering_istream &in);
+        void writeToStream(io::filtering_ostream &out) override;
+        void readFromStream(io::filtering_istream &in) override;
 
     private:
         std::size_t dataSize;
