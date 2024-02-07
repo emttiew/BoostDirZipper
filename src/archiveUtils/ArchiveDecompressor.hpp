@@ -5,14 +5,14 @@
 #include <memory>
 #include <vector>
 
-#include "ArchiveEntry.hpp"
+#include "EntryFactory.hpp"
 
 namespace fs = boost::filesystem;
 namespace io = boost::iostreams;
 
 namespace archive_utils
 {
-    using ArchiveEntryPtr = std::shared_ptr<ArchiveEntry>;
+    using ArchiveEntryPtr = std::shared_ptr<EntryFactory>;
     using ArchiveEntryPtrVec = std::vector<ArchiveEntryPtr>;
 
     class ArchiveDecompressor
@@ -21,7 +21,7 @@ namespace archive_utils
         explicit ArchiveDecompressor(const fs::path &inputDir);
         ArchiveEntryPtrVec getEntries() const;
         void decompress(); // should throw, return error code ...
-        
+
     private:
         io::filtering_istream archiveStream;
         ArchiveEntryPtrVec entries;

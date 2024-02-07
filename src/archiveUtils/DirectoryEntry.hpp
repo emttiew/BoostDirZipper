@@ -11,10 +11,10 @@ namespace archive_utils
         File = '\x01'
     };
 
-    struct RelativePathEntry : Entry
+    struct DirectoryEntry : Entry
     {
-        RelativePathEntry(std::string const &path, EntryType pEntryType) : pathSize(path.size()), filePath(path), entryType(pEntryType) {}
-        explicit RelativePathEntry(io::filtering_istream &in)
+        DirectoryEntry(std::string const &path, EntryType pEntryType) : pathSize(path.size()), filePath(path), entryType(pEntryType) {}
+        explicit DirectoryEntry(io::filtering_istream &in)
         {
             this->readFromStream(in);
         }

@@ -3,20 +3,20 @@
 #include "Entry.hpp"
 #include <cstring>
 #include <fstream>
-#include <memory>
 #include <iostream>
+#include <memory>
 
 namespace archive_utils
 {
-    class DataEntry : Entry
+    class FileEntry : Entry
     {
     public:
-        explicit DataEntry(std::size_t pDataSize) : dataSize(pDataSize)
+        explicit FileEntry(std::size_t pDataSize) : dataSize(pDataSize)
         {
             dataBuffer.reserve(dataSize);
         }
 
-        explicit DataEntry(io::filtering_istream &in)
+        explicit FileEntry(io::filtering_istream &in)
         {
             this->readFromStream(in);
         }

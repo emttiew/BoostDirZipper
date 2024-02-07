@@ -1,15 +1,15 @@
 #pragma once
 
-#include "DataEntry.hpp"
-#include "RelativePathEntry.hpp"
+#include "FileEntry.hpp"
+#include "DirectoryEntry.hpp"
 #include <memory>
 
 namespace archive_utils
 {
-    class ArchiveEntry
+    class EntryFactory
     {
     public:
-        ArchiveEntry(io::filtering_istream &in) : archiveStream(in) ,relativePath(in), data(in) {}
+        EntryFactory(io::filtering_istream &in) : archiveStream(in), relativePath(in), data(in) {}
         // void read() // TODO: should return error code, handle bad bit or handle exceptions
         // {
         //     relativePath.readFromStream(archiveStream);
@@ -32,8 +32,8 @@ namespace archive_utils
         }
 
     private:
-        io::filtering_istream& archiveStream;
-        RelativePathEntry relativePath;
-        DataEntry data;
+        io::filtering_istream &archiveStream;
+        DirectoryEntry relativePath;
+        FileEntry data;
     };
 }

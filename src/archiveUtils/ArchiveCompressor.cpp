@@ -26,8 +26,8 @@ namespace archive_utils
             io::filtering_ostream fileStream;
             fileStream.push(archiveStream);
             std::string const &path = fs::relative(filePath, inputDir).string();
-            RelativePathEntry relativePathEntry(path, EntryType::File);
-            DataEntry dataEntry(fs::file_size(filePath));
+            DirectoryEntry relativePathEntry(path, EntryType::File);
+            FileEntry dataEntry(fs::file_size(filePath));
             dataEntry.read(file);
             relativePathEntry.writeToStream(fileStream);
             dataEntry.writeToStream(fileStream);
@@ -44,7 +44,7 @@ namespace archive_utils
         io::filtering_ostream fileStream;
         fileStream.push(archiveStream);
         std::string const &path = fs::relative(filePath, inputDir).string();
-        RelativePathEntry entry(path, EntryType::Directory);
+        DirectoryEntry entry(path, EntryType::Directory);
         entry.writeToStream(fileStream);
     }
 }

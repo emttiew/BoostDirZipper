@@ -3,8 +3,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
-#include "DataEntry.hpp"
-#include "RelativePathEntry.hpp"
+#include "FileEntry.hpp"
+#include "DirectoryEntry.hpp"
 
 namespace fs = boost::filesystem;
 

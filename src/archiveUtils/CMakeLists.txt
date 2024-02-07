@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.16)
 project(ArchiveUtils CXX)
 
 set(SOURCE_FILES
-    Compress.cpp
-    Decompress.cpp
     ArchiveCompressor.cpp
     ArchiveDecompressor.cpp
-    RelativePathEntry.cpp
-    DataEntry.cpp
+    Compress.cpp
+    Decompress.cpp
+    DirectoryEntry.cpp
+    FileEntry.cpp
 )
 
 add_library(ArchiveUtils STATIC ${SOURCE_FILES})
