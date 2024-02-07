@@ -1,4 +1,6 @@
 #include "ArchiveDecompressor.hpp"
+#include "DirectoryEntry.hpp"
+#include "FileEntry.hpp"
 
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -15,9 +17,14 @@ namespace archive_utils
     {
         while (archiveStream.peek() != EOF)
         {
-            auto entry = std::make_shared<EntryFactory>(archiveStream);
-            // entry->read();
-            entries.push_back(std::move(entry));
+            auto directoryEntry = std::make_shared<DirectoryEntry>(archiveStream);
+            if (directoryEntry->isDirectory())
+            {
+                entries.push_back(std::move(directoryEntry));
+                continue;
+            }
+
+            entries.push_back(std::make_shared<FileEntry>(archiveStream, *directoryEntry));
         }
     }
 

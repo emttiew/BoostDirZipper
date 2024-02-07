@@ -5,6 +5,7 @@ namespace archive_utils
     void FileEntry::writeToStream(io::filtering_ostream &out)
     {
         std::cout << "writing " << dataSize << "into stream" << std::endl;
+        directory.writeToStream(out);
         out.write(reinterpret_cast<char *>(&dataSize), sizeof(dataSize));
         out.write(dataBuffer.data(), dataSize);
     }

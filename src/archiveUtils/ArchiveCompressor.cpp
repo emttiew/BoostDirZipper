@@ -25,12 +25,13 @@ namespace archive_utils
             std::cout << "adding " << filePath.string() << std::endl;
             io::filtering_ostream fileStream;
             fileStream.push(archiveStream);
+
             std::string const &path = fs::relative(filePath, inputDir).string();
-            DirectoryEntry relativePathEntry(path, EntryType::File);
-            FileEntry dataEntry(fs::file_size(filePath));
-            dataEntry.read(file);
-            relativePathEntry.writeToStream(fileStream);
-            dataEntry.writeToStream(fileStream);
+            FileEntry::DataBufferType buffer(fs::file_size(filePath));
+            file.read(buffer.data(), buffer.size());
+            FileEntry fileEntry(buffer, path);
+            fileEntry.writeToStream(fileStream);
+            
             file.close();
         }
         else

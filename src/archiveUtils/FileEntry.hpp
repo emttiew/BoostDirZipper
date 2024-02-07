@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DirectoryEntry.hpp"
 #include "Entry.hpp"
 #include <cstring>
 #include <fstream>
@@ -8,15 +9,15 @@
 
 namespace archive_utils
 {
-    class FileEntry : Entry
+    class FileEntry : public Entry
     {
     public:
-        explicit FileEntry(std::size_t pDataSize) : dataSize(pDataSize)
+        using DataBufferType = std::vector<char>;
+        FileEntry(DataBufferType const &buffer, std::string const &path) : Entry(buffer.size()), dataBuffer(buffer), directory(path, EntryType::File)
         {
-            dataBuffer.reserve(dataSize);
         }
 
-        explicit FileEntry(io::filtering_istream &in)
+        FileEntry(io::filtering_istream &in, DirectoryEntry const& pDirectory) : directory(pDirectory)
         {
             this->readFromStream(in);
         }
@@ -27,22 +28,20 @@ namespace archive_utils
             file.read(dataBuffer.data(), dataSize);
         }
 
-        const char *getData() const
+        void writeToStream(io::filtering_ostream &out) override;
+        void readFromStream(io::filtering_istream &in) override;
+        virtual std::string getPath() const override
+        {
+            return directory.getPath();
+        }
+        const char *getData() const override
         {
             return dataBuffer.data();
         }
 
-        std::size_t getSize() const
-        {
-            return dataSize;
-        }
-
-        void writeToStream(io::filtering_ostream &out) override;
-        void readFromStream(io::filtering_istream &in) override;
-
     private:
-        std::size_t dataSize;
-        std::vector<char> dataBuffer;
+        DataBufferType dataBuffer;
+        DirectoryEntry directory;
     };
 
     // struct DataEntry

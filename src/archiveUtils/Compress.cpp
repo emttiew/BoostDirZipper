@@ -51,7 +51,7 @@ namespace archive_utils
         {
             if (entry)
             {
-                auto filepath = outputDir / fs::path{entry->getFilePath()}.relative_path();
+                auto filepath = outputDir / fs::path{entry->getPath()}.relative_path();
                 std::cout << "decompressing: " << filepath.string() << std::endl;
                 if (entry->isDirectory())
                 {
@@ -62,7 +62,7 @@ namespace archive_utils
                     ensureDirectoryExists(filepath.parent_path());
                     std::ofstream destFile;
                     destFile.open(filepath.string().c_str(), std::ios::binary | std::ios::trunc);
-                    entry->write(destFile);
+                    destFile.write(entry->getData(), entry->getDataSize());
                     destFile.close();
                 }
             }

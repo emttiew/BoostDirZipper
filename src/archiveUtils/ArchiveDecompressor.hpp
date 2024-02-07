@@ -5,14 +5,14 @@
 #include <memory>
 #include <vector>
 
-#include "EntryFactory.hpp"
+#include "Entry.hpp"
 
 namespace fs = boost::filesystem;
 namespace io = boost::iostreams;
 
 namespace archive_utils
 {
-    using ArchiveEntryPtr = std::shared_ptr<EntryFactory>;
+    using ArchiveEntryPtr = std::shared_ptr<Entry>;
     using ArchiveEntryPtrVec = std::vector<ArchiveEntryPtr>;
 
     class ArchiveDecompressor
