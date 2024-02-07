@@ -2,6 +2,8 @@
 
 #include "FileEntry.hpp"
 #include "DirectoryEntry.hpp"
+#include "Entry.hpp"
+
 #include <memory>
 
 namespace archive_utils

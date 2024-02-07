@@ -5,15 +5,10 @@
 
 namespace archive_utils
 {
-    enum class EntryType : char
-    {
-        Directory = '\x00',
-        File = '\x01'
-    };
 
     struct DirectoryEntry : Entry
     {
-        DirectoryEntry(std::string const &path, EntryType pEntryType) : pathSize(path.size()), filePath(path), entryType(pEntryType) {}
+        DirectoryEntry(std::string const &path, EntryType pEntryType) : Entry(pEntryType), pathSize(path.size()), filePath(path) {}
         explicit DirectoryEntry(io::filtering_istream &in)
         {
             this->readFromStream(in);
@@ -21,18 +16,12 @@ namespace archive_utils
         void writeToStream(io::filtering_ostream &out) override;
         void readFromStream(io::filtering_istream &in) override;
 
-        bool isDirectory() const
-        {
-            return entryType == EntryType::Directory;
-        }
-
         std::string getPath() const
         {
             return filePath;
         }
 
     private:
-        EntryType entryType;
         std::size_t pathSize;
         std::string filePath;
     };
