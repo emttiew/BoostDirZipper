@@ -42,12 +42,12 @@ namespace archive_utils
     {
         ArchiveDecompressor archive(inputDir);
         ensureDirectoryExists(outputDir);
-        
+
         archive.decompress(); // TODO handle errors
 
-        std::cout << "entries size " << archive.getEntries().size() << std::endl; 
+        std::cout << "entries size " << archive.getEntries().size() << std::endl;
 
-        for (ArchiveEntryPtr const &entry : archive.getEntries())
+        for (EntryPtr const &entry : archive.getEntries())
         {
             if (entry)
             {
@@ -62,11 +62,15 @@ namespace archive_utils
                     ensureDirectoryExists(filepath.parent_path());
                     std::ofstream destFile;
                     destFile.open(filepath.string().c_str(), std::ios::binary | std::ios::trunc);
-                    destFile.write(entry->getData(), entry->getDataSize());
-                    destFile.close();
+                    if (destFile)
+                    {
+                        destFile.write(entry->getData(), entry->getDataSize());
+                        destFile.close();
+                    }
                 }
             }
-            else{
+            else
+            {
                 std::cout << "null entry" << std::endl;
             }
         }

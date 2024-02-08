@@ -17,18 +17,20 @@ namespace archive_utils
     {
         while (archiveStream.peek() != EOF)
         {
-            auto directoryEntry = std::make_shared<DirectoryEntry>(archiveStream);
+            auto directoryEntry = std::make_shared<DirectoryEntry>();
+            directoryEntry->readFromStream(archiveStream);
             if (directoryEntry->isDirectory())
             {
                 entries.push_back(std::move(directoryEntry));
                 continue;
             }
-
-            entries.push_back(std::make_shared<FileEntry>(archiveStream, *directoryEntry));
+            auto fileEntry = std::make_shared<FileEntry>();
+            fileEntry->readFromStream(archiveStream);
+            entries.push_back(std::move(fileEntry));
         }
     }
 
-    ArchiveEntryPtrVec ArchiveDecompressor::getEntries() const
+    EntryPtrVec ArchiveDecompressor::getEntries() const
     {
         return entries;
     }

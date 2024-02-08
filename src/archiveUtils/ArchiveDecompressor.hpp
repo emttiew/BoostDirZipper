@@ -12,18 +12,18 @@ namespace io = boost::iostreams;
 
 namespace archive_utils
 {
-    using ArchiveEntryPtr = std::shared_ptr<Entry>;
-    using ArchiveEntryPtrVec = std::vector<ArchiveEntryPtr>;
+    using EntryPtr = std::shared_ptr<Entry>;
+    using EntryPtrVec = std::vector<EntryPtr>;
 
     class ArchiveDecompressor
     {
     public:
         explicit ArchiveDecompressor(const fs::path &inputDir);
-        ArchiveEntryPtrVec getEntries() const;
+        EntryPtrVec getEntries() const;
         void decompress(); // should throw, return error code ...
 
     private:
         io::filtering_istream archiveStream;
-        ArchiveEntryPtrVec entries;
+        EntryPtrVec entries;
     };
 }

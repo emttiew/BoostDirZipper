@@ -13,13 +13,9 @@ namespace archive_utils
     {
     public:
         using DataBufferType = std::vector<char>;
+        FileEntry() = default;
         FileEntry(DataBufferType const &buffer, std::string const &path) : Entry(buffer.size()), dataBuffer(buffer), directory(path, EntryType::File)
         {
-        }
-
-        FileEntry(io::filtering_istream &in, DirectoryEntry const& pDirectory) : directory(pDirectory)
-        {
-            this->readFromStream(in);
         }
 
         void read(std::ifstream &file) // handle exception or file not opened
@@ -43,12 +39,4 @@ namespace archive_utils
         DataBufferType dataBuffer;
         DirectoryEntry directory;
     };
-
-    // struct DataEntry
-    // {
-    //     void writeToStream(io::filtering_ostream &out);
-    //     void readFromStream(io::filtering_istream &in);
-    //     std::size_t dataSize;
-    //     std::vector<char> dataBuffer;
-    // };
 } // namespace archive_utils
