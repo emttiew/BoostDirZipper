@@ -20,7 +20,7 @@ namespace archive_utils
     public:
         explicit ArchiveDecompressor(const fs::path &inputDir);
         EntryPtrVec getEntries() const;
-        void decompress(); // should throw, return error code ...
+        void decompress();
 
     private:
         io::filtering_istream archiveStream;

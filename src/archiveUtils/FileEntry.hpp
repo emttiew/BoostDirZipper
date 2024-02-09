@@ -14,15 +14,7 @@ namespace archive_utils
     public:
         using DataBufferType = std::vector<char>;
         FileEntry() = default;
-        FileEntry(DataBufferType const &buffer, std::string const &path) : Entry(buffer.size()), dataBuffer(buffer), directory(path, EntryType::File)
-        {
-        }
-
-        void read(std::ifstream &file) // handle exception or file not opened
-        {
-            std::cout << "reading " << dataSize << "into buffer" << std::endl;
-            file.read(dataBuffer.data(), dataSize);
-        }
+        FileEntry(DataBufferType const &buffer, std::string const &path) : Entry(buffer.size()), dataBuffer(buffer), directory(path, EntryType::File) {}
 
         void writeToStream(io::filtering_ostream &out) override;
         void readFromStream(io::filtering_istream &in) override;

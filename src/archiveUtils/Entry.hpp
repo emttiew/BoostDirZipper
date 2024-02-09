@@ -16,7 +16,7 @@ namespace archive_utils
     class Entry
     {
     public:
-        Entry() = default; // deafult for now - later consider extra EntryType for decompressing
+        Entry() = default;
         virtual void writeToStream(io::filtering_ostream &out) = 0;
         virtual void readFromStream(io::filtering_istream &in) = 0;
         virtual std::string getPath() const = 0;

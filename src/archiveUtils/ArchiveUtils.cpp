@@ -2,13 +2,13 @@
 #include "ArchiveCompressor.hpp"
 #include "ArchiveDecompressor.hpp"
 
+#include <cassert>
 #include <iostream>
 
 namespace archive_utils
 {
     namespace io = boost::iostreams;
 
-    // TODO this function could be inside archive class
     void compressDirectory(const fs::path &inputDir, const fs::path &outputDir)
     {
         ArchiveCompressor archive(outputDir, inputDir);
@@ -43,36 +43,35 @@ namespace archive_utils
         ArchiveDecompressor archive(inputDir);
         ensureDirectoryExists(outputDir);
 
-        archive.decompress(); // TODO handle errors
+        archive.decompress();
 
         std::cout << "entries size " << archive.getEntries().size() << std::endl;
 
         for (EntryPtr const &entry : archive.getEntries())
         {
-            if (entry)
+            assert(entry);
+            auto filepath = outputDir / fs::path{entry->getPath()}.relative_path();
+            std::cout << "decompressing: " << filepath.string() << std::endl;
+            if (entry->isDirectory())
             {
-                auto filepath = outputDir / fs::path{entry->getPath()}.relative_path();
-                std::cout << "decompressing: " << filepath.string() << std::endl;
-                if (entry->isDirectory())
-                {
-                    ensureDirectoryExists(filepath);
-                }
-                else
-                {
-                    ensureDirectoryExists(filepath.parent_path());
-                    std::ofstream destFile;
-                    destFile.open(filepath.string().c_str(), std::ios::binary | std::ios::trunc);
-                    if (destFile)
-                    {
-                        destFile.write(entry->getData(), entry->getDataSize());
-                        destFile.close();
-                    } // TODO
-                    // else throw
-                }
+                ensureDirectoryExists(filepath);
             }
             else
             {
-                std::cout << "null entry" << std::endl;
+                ensureDirectoryExists(filepath.parent_path());
+                std::ofstream destFile;
+                destFile.open(filepath.string().c_str(), std::ios::binary | std::ios::trunc);
+                if (destFile)
+                {
+                    destFile.write(entry->getData(), entry->getDataSize());
+                    if (destFile.bad())
+                        throw std::runtime_error("error while writing to file with decompressed data " + filepath.string());
+                    destFile.close();
+                }
+                else
+                {
+                    throw std::runtime_error("error while opening file for decompressed data " + filepath.string());
+                }
             }
         }
     }
