@@ -1,4 +1,4 @@
-#include "archiveUtils/Compress.hpp"
+#include "archiveUtils/ArchiveUtils.hpp"
 #include <boost/filesystem.hpp>
 #include <iostream>
 

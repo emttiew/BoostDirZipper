@@ -26,10 +26,9 @@ namespace archive_utils
             io::filtering_ostream fileStream;
             fileStream.push(archiveStream);
 
-            std::string const &path = fs::relative(filePath, inputDir).string();
             FileEntry::DataBufferType buffer(fs::file_size(filePath));
             file.read(buffer.data(), buffer.size());
-            FileEntry fileEntry(buffer, path);
+            FileEntry fileEntry(buffer, fs::relative(filePath, inputDir).string());
             fileEntry.writeToStream(fileStream);
             
             file.close();

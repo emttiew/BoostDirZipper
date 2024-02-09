@@ -10,7 +10,7 @@ namespace archive_utils
     ArchiveDecompressor::ArchiveDecompressor(const fs::path &inputDir)
     {
         archiveStream.push(io::gzip_decompressor());
-        archiveStream.push(io::file_descriptor_source(inputDir.string(), std::ios::binary));
+        archiveStream.push(io::file_descriptor_source(inputDir.string(), std::ios::binary)); // TODO catch exception if no such directory?
     }
 
     void ArchiveDecompressor::decompress()

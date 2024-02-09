@@ -4,8 +4,7 @@ project(ArchiveUtils CXX)
 set(SOURCE_FILES
     ArchiveCompressor.cpp
     ArchiveDecompressor.cpp
-    Compress.cpp
-    Decompress.cpp
+    ArchiveUtils.cpp
     DirectoryEntry.cpp
     FileEntry.cpp
 )
@@ -20,4 +19,4 @@ else()
 endif()
 
 install(TARGETS ArchiveUtils DESTINATION ${LIB_DIR})
-install(FILES Decompress.hpp Compress.hpp DESTINATION ${INCLUDE_DIR})
+install(FILES ArchiveUtils.hpp DESTINATION ${INCLUDE_DIR})

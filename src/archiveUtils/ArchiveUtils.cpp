@@ -1,4 +1,4 @@
-#include "Compress.hpp"
+#include "ArchiveUtils.hpp"
 #include "ArchiveCompressor.hpp"
 #include "ArchiveDecompressor.hpp"
 
@@ -66,7 +66,8 @@ namespace archive_utils
                     {
                         destFile.write(entry->getData(), entry->getDataSize());
                         destFile.close();
-                    }
+                    } // TODO
+                    // else throw
                 }
             }
             else
