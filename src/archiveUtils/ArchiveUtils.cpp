@@ -13,18 +13,25 @@ namespace archive_utils
     {
         ArchiveCompressor archive(outputDir, inputDir);
 
-        // TODO what if inputDir is not a directory
-        for (fs::recursive_directory_iterator it(inputDir), end; it != end; ++it)
+        // TODO support single file compressing
+        if (fs::is_regular_file(inputDir))
         {
-            if (fs::is_regular_file(*it))
+            throw std::runtime_error("error, provided path is not a directory " + inputDir.string());
+        }
+        else
+        {
+            for (fs::recursive_directory_iterator it(inputDir), end; it != end; ++it)
             {
-                std::cout << "file path: " << it->path().string() << std::endl;
-                archive.addFile(it->path());
-            }
-            if (fs::is_directory(*it))
-            {
-                std::cout << "dirctory path: " << it->path().string() << std::endl;
-                archive.addDirectory(it->path());
+                if (fs::is_regular_file(*it))
+                {
+                    std::cout << "file path: " << it->path().string() << std::endl;
+                    archive.addFile(it->path());
+                }
+                if (fs::is_directory(*it))
+                {
+                    std::cout << "dirctory path: " << it->path().string() << std::endl;
+                    archive.addDirectory(it->path());
+                }
             }
         }
     }

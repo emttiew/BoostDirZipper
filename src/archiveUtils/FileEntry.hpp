@@ -13,8 +13,9 @@ namespace archive_utils
     {
     public:
         using DataBufferType = std::vector<char>;
-        FileEntry() = default;
-        FileEntry(DataBufferType const &buffer, std::string const &path) : Entry(buffer.size()), dataBuffer(buffer), directory(path, EntryType::File) {}
+        FileEntry() : Entry(EntryType::File) {}
+        FileEntry(DataBufferType const &buffer, std::string const &path) : Entry(EntryType::File, buffer.size()), dataBuffer(buffer), directory(path, EntryType::File) {}
+        explicit FileEntry(DirectoryEntry const &pDirectory) : Entry(EntryType::File), directory(pDirectory) {}
 
         void writeToStream(io::filtering_ostream &out) override;
         void readFromStream(io::filtering_istream &in) override;

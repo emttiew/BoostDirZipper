@@ -29,9 +29,9 @@ namespace archive_utils
                 entries.push_back(std::move(directoryEntry));
                 continue;
             }
-            auto fileEntry = std::make_shared<FileEntry>();
+            auto fileEntry = std::make_shared<FileEntry>(*directoryEntry);
             fileEntry->readFromStream(archiveStream);
-            if (archiveStream.bad())
+                        if (archiveStream.bad())
                 throw std::runtime_error("error while reading from decompressing stream");
             entries.push_back(std::move(fileEntry));
         }
