@@ -17,4 +17,15 @@ namespace archive_utils
         dataBuffer.resize(dataSize);
         in.read(dataBuffer.data(), dataSize);
     }
+
+    void FileEntry::writeMetaData(io::filtering_ostream &out)
+    {
+        directory.writeToStream(out);
+        out.write(reinterpret_cast<char *>(&dataSize), sizeof(dataSize));
+    }
+
+    void FileEntry::writeSome(io::filtering_ostream &out, DataBufferType const& buffer, std::streamsize const streamSize)    
+    {
+        out.write(buffer.data(), streamSize);
+    }
 }
