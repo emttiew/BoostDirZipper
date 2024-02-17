@@ -14,7 +14,7 @@ void compressDirectory(const fs::path &inputDir, const fs::path &outputDir) {
 
   // TODO support single file compressing
   if (fs::is_regular_file(inputDir)) {
-    throw std::runtime_error("error, provided path is not a directory " +
+    throw std::runtime_error("error, provided path is not a folder " +
                              inputDir.string());
   } else {
     for (fs::recursive_directory_iterator it(inputDir), end; it != end; ++it) {
