@@ -1,13 +1,20 @@
-cmake_minimum_required(VERSION 3.16)
-project(BoostDirZipperTests)
+include(FetchContent)
 
-add_subdirectory(googleTest)
+set(TEST_NAME ${PROJECT_NAME}-Test)
 
-include_directories(${HEADERS_DIR})
-include_directories(googleTest/googletest/googletest/include)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY "https://github.com/google/googletest.git"
+    GIT_TAG release-1.11.0
+)
 
-set(SOURCE_FILES main.cpp src/ArchiveUtilsTest.cpp)
+FetchContent_MakeAvailable(googletest)
 
-add_executable(BoostDirZipperTests ${SOURCE_FILES})
-target_link_libraries(BoostDirZipperTests ArchiveUtils gtest)
-install(TARGETS BoostDirZipperTests DESTINATION ${BIN_DIR})
+set(SOURCE_FILES test.cpp src/ArchiveUtilsTest.cpp)
+
+add_executable(${TEST_NAME} ${SOURCE_FILES})
+target_link_libraries(${TEST_NAME} gtest_main ArchiveUtils)
+set_target_properties(${TEST_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${BIN_DIR}")
+
+include(GoogleTest)
+gtest_discover_tests(${TEST_NAME})

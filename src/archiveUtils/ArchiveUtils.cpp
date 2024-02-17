@@ -52,8 +52,7 @@ void decompressDirectory(const fs::path &inputDir, const fs::path &outputDir) {
       ensureDirectoryExists(filepath);
     } else {
       ensureDirectoryExists(filepath.parent_path());
-      std::ofstream destFile;
-      destFile.open(filepath.string().c_str(),
+      std::ofstream destFile(filepath.string().c_str(),
                     std::ios::binary | std::ios::trunc);
       if (destFile) {
         destFile.write(entry->getData(), entry->getDataSize());
