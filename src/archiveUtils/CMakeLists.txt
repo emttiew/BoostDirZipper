@@ -10,7 +10,7 @@ set(SOURCE_FILES
 )
 
 add_library(ArchiveUtils STATIC ${SOURCE_FILES})
-find_package(Boost 1.71.0 COMPONENTS filesystem iostreams) 
+find_package(Boost 1.71.0 COMPONENTS iostreams) 
 
 if(Boost_FOUND)
     target_link_libraries(ArchiveUtils ${Boost_LIBRARIES})

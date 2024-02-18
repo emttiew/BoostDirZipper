@@ -5,7 +5,6 @@
 #include <iostream>
 #include <stdexcept>
 
-namespace fs = boost::filesystem;
 namespace io = boost::iostreams;
 
 namespace {

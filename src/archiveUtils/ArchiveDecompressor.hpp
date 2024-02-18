@@ -1,16 +1,14 @@
 #pragma once
 
-#include <boost/filesystem.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
+#include <filesystem>
 #include <memory>
 #include <vector>
 
 #include "Entry.hpp"
 
-namespace fs = boost::filesystem;
-namespace io = boost::iostreams;
-
 namespace archive_utils {
+namespace fs = std::filesystem;
+namespace io = boost::iostreams;
 using EntryPtr = std::shared_ptr<Entry>;
 using EntryPtrVec = std::vector<EntryPtr>;
 

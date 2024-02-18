@@ -1,14 +1,12 @@
 #pragma once
 
-#include <boost/filesystem.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
+#include <filesystem>
 
 #include "DirectoryEntry.hpp"
 #include "FileEntry.hpp"
 
-namespace fs = boost::filesystem;
-
 namespace archive_utils {
+namespace fs = std::filesystem;
 class ArchiveCompressor {
  public:
   ArchiveCompressor(const fs::path &outputDir, const fs::path &pInputDir);

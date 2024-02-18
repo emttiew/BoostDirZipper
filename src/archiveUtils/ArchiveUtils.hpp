@@ -1,9 +1,9 @@
 #pragma once
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace archive_utils {
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 void compressDirectory(const fs::path &inputDir, const fs::path &outputDir);
 void decompressDirectory(const fs::path &inputDir, const fs::path &outputDir);

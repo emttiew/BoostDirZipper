@@ -5,7 +5,7 @@
 #include <ArchiveUtils.hpp>
 
 using namespace ::testing;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 class ArchiveUtilsTest : public Test {
 protected:
