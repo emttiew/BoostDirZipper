@@ -4,13 +4,13 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <stdexcept>
 
-namespace io = boost::iostreams;
-
 namespace {
 const int BUFFER_SIZE = 1024;
 }
 
 namespace archive_utils {
+namespace io = boost::iostreams;
+
 ArchiveCompressor::ArchiveCompressor(const fs::path &outputDir,
                                      const fs::path &pInputDir)
     : inputDir(pInputDir) {
