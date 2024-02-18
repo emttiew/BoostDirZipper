@@ -5,6 +5,8 @@ project(BoostDirZipper)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Wall -Werror -Wpedantic -Wextra")
 
+enable_testing()
+
 set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/build/include)
 set(BIN_DIR ${PROJECT_SOURCE_DIR}/build/bin)
 set(LIB_DIR ${PROJECT_SOURCE_DIR}/build/lib)
