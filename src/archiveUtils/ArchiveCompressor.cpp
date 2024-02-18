@@ -2,7 +2,6 @@
 
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
-#include <iostream>
 #include <stdexcept>
 
 namespace io = boost::iostreams;
@@ -49,7 +48,6 @@ void ArchiveCompressor::addFile(const fs::path &filePath) {
   std::ifstream file(filePath.string(), std::ios::binary);
   if (!file) throw std::runtime_error("cannot open input file");
 
-  std::cout << "adding " << filePath.string() << std::endl;
   io::filtering_ostream fileStream;
   fileStream.push(archiveStream);
 

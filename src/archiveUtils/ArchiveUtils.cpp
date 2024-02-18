@@ -1,7 +1,6 @@
 #include "ArchiveUtils.hpp"
 
 #include <cassert>
-#include <iostream>
 
 #include "ArchiveCompressor.hpp"
 #include "ArchiveDecompressor.hpp"
@@ -19,11 +18,9 @@ void compressDirectory(const fs::path &inputDir, const fs::path &outputDir) {
   } else {
     for (fs::recursive_directory_iterator it(inputDir), end; it != end; ++it) {
       if (fs::is_regular_file(*it)) {
-        std::cout << "file path: " << it->path().string() << std::endl;
         archive.addFile(it->path());
       }
       if (fs::is_directory(*it)) {
-        std::cout << "dirctory path: " << it->path().string() << std::endl;
         archive.addDirectory(it->path());
       }
     }
@@ -42,18 +39,15 @@ void decompressDirectory(const fs::path &inputDir, const fs::path &outputDir) {
 
   archive.decompress();
 
-  std::cout << "entries size " << archive.getEntries().size() << std::endl;
-
   for (EntryPtr const &entry : archive.getEntries()) {
     assert(entry);
     auto filepath = outputDir / fs::path{entry->getPath()}.relative_path();
-    std::cout << "decompressing: " << filepath.string() << std::endl;
     if (entry->isDirectory()) {
       ensureDirectoryExists(filepath);
     } else {
       ensureDirectoryExists(filepath.parent_path());
       std::ofstream destFile(filepath.string().c_str(),
-                    std::ios::binary | std::ios::trunc);
+                             std::ios::binary | std::ios::trunc);
       if (destFile) {
         destFile.write(entry->getData(), entry->getDataSize());
         if (destFile.bad())
