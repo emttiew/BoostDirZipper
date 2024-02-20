@@ -19,10 +19,14 @@ protected:
         file1 << "Test data for file1";
         file1.close();
 
-        fs::create_directory(tempDir / "subdir");
-        std::ofstream file2(tempDir / "subdir" / "file2.txt");
-        file2 << "Test data for file2";
+        std::ofstream file2(tempDir / "bigFile2.txt");
+        file2 << std::string(4 * 1024, 'A');
         file2.close();
+
+        fs::create_directory(tempDir / "subdir");
+        std::ofstream file3(tempDir / "subdir" / "file3.txt");
+        file3 << "Test data for file3";
+        file3.close();
     }
 
     void TearDown() override {
